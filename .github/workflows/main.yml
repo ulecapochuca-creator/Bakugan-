@@ -1,0 +1,42 @@
+
+name: Build Bakugan APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "BakuganNativeDemo.zip"
+      - ".github/workflows/main.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar herramientas Android
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Descomprimir proyecto
+        run: unzip -o BakuganNativeDemo.zip -d proyecto
+
+      - name: Compilar APK
+        working-directory: proyecto/BakuganNativeDemo
+        run: |
+          gradle assembleDebug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bakugan-debug-apk
+          path: proyecto/BakuganNativeDemo/app/build/outputs/apk/debug/*.apk
